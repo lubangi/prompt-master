@@ -1,19 +1,38 @@
 import Prompt from "@models/prompt";
 import { connectToDB } from "@utils/database";
 
-export const GET = async (request, { params }) => {
+// export const GET = async (request, { params }) => {
+//     try {
+//         await connectToDB()
+
+//         const prompt = await Prompt.findById(params.id).populate("creator")
+//         if (!prompt) return new Response("Prompt Not Found", { status: 404 });
+
+//         return new Response(JSON.stringify(prompt), { status: 200 })
+//         console.log(prompt)
+
+//     } catch (error) {
+//         return new Response("Internal Server Error", { status: 500 });
+//     }
+// }
+export const GET = async (request) => {
+    const headersList = headers();
+    const referer = headersList.get('referer');
     try {
-        await connectToDB()
-
-        const prompt = await Prompt.findById(params.id).populate("creator")
-        if (!prompt) return new Response("Prompt Not Found", { status: 404 });
-
-        return new Response(JSON.stringify(prompt), { status: 200 })
-
+      await connectToDB();
+  
+      const prompts = await Prompt.find({}).populate('creator');
+      return new Response(JSON.stringify(prompts), {
+        status: 200,
+        headers: {
+          referer: referer,
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+        },
+      });
     } catch (error) {
-        return new Response("Internal Server Error", { status: 500 });
+      return new Response('Failed to fetch all prompts', { status: 500 });
     }
-}
+  };
 
 export const PATCH = async (request, { params }) => {
     const { prompt, tag } = await request.json();
